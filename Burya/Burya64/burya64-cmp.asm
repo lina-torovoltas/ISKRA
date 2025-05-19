@@ -1,5 +1,5 @@
 ; Only works on linux!!!
-; ISKRA-Burya64 ver1.0-compressed
+; ISKRA-Burya64 ver1.0-compressed on FASM
 
 format ELF64 executable
 entry start
