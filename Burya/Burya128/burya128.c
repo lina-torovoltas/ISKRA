@@ -1,14 +1,18 @@
-// ISKRA-Burya64 ver1.0 on C
+// ISKRA-Burya128 ver1.0 on C
 
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 
-// Initial constants for registers A–D used in the hash function
+// Initial constants for registers A-D used in the hash function
 uint16_t A = 0x0782;
 uint16_t B = 0x07A9;
 uint16_t C = 0x07B1;
 uint16_t D = 0x05D4;
+uint16_t E = 0x0799;
+uint16_t F = 0x076A;
+uint16_t G = 0x0788;
+uint16_t H = 0x0707;
 
 // Converts a 16-bit word into a custom 4-character hexadecimal string using 4-bit rotations for obfuscation.
 void write_hex_word(uint16_t value, char *buffer) {
@@ -21,9 +25,9 @@ void write_hex_word(uint16_t value, char *buffer) {
 
 int main() {
     // Buffers for input string, extracted bytes, and final hex output
-    char input_buffer[65] = {0};
+    char input_buffer[129] = {0};
     uint8_t data_bytes[8] = {0};
-    char hex_buffer[17] = {0};
+    char hex_buffer[33] = {0};
 
     // Read a decimal number string from stdin
     if (!fgets(input_buffer, sizeof(input_buffer), stdin)) {
@@ -47,33 +51,46 @@ int main() {
         number >>= 8;
     }
 
-    // Main loop: process each byte and update registers A–D
+    // Main loop: process each byte and update registers A–H
     for (size_t i = 0; i < byte_count; i++) {
         uint8_t byte = data_bytes[i];
-        A = (A + byte) & 0xFFFF;
-
-        // Rotate B left by (byte mod 16) bits
+        A = (A + byte + F) & 0xFFFF;
+        
+        // Mix byte into B–D using rotation and XOR with extra state bytes (E, G, H) for nonlinear diffusion.
         uint16_t rot = byte & 15;
-        B = ((B << rot) | (B >> (16 - rot))) & 0xFFFF;
+        B = ((B << rot) | (B >> (16 - rot))) ^ H;
+        C ^= byte ^ E;
+        D = (D + (byte ^ G)) & 0xFFFF;
 
-        // XOR byte with C and D
-        C ^= byte;
-        D ^= byte;
+        // Update E–H using shifted/rotated byte, complement, and other registers to enhance entropy and mixing
+        E = (E + ((byte << 1) | (byte >> 7)) + C) & 0xFFFF;
+        F ^= (byte ^ 0xAA) ^ B;
+        G = ((G >> rot) | (G << (16 - rot))) + D;
+        H = (H + (~byte & 0xFF) + A) & 0xFFFF;
 
-        // Cycle registers A-D to shuffle state
+        // Cycle registers A-H to shuffle state
         uint16_t tmpA = A, tmpB = B, tmpC = C, tmpD = D;
+        uint16_t tmpE = E, tmpF = F, tmpG = G, tmpH = H;
         A = tmpB;
         B = tmpC;
         C = tmpD;
-        D = tmpA;
-    }
+        D = tmpE;
+        E = tmpF;
+        F = tmpG;
+        G = tmpH;
+        H = tmpA;
+}
 
-    // Compose final hex string from registers A–D
+    // Compose final hex string from registers A–H
     char *p = hex_buffer;
     write_hex_word(A, p); p += 4;
     write_hex_word(B, p); p += 4;
     write_hex_word(C, p); p += 4;
     write_hex_word(D, p); p += 4;
+    write_hex_word(E, p); p += 4;
+    write_hex_word(F, p); p += 4;
+    write_hex_word(G, p); p += 4;
+    write_hex_word(H, p); p += 4;
     *p++ = '\n';
     *p = '\0';
 

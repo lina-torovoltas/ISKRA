@@ -11,7 +11,7 @@ segment readable writeable
     C dw 0x07B1
     D dw 0x05D4
     
-    input_buffer rb 32 ; Buffer to store up to 32 bytes of user input
+    input_buffer rb 64 ; Buffer to store up to 32 bytes of user input
     number dq 0 ; 64-bit integer to store the parsed number from input
     data_bytes rb 8 ; Array to store byte-wise representation of the number (little-endian)
     hex_buffer rb 17 ; Output buffer for 16 hex chars + newline

@@ -4,11 +4,11 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-// Initial constants for registers A and D
+// Initial constants for registers A and D used in the hash function
 uint16_t A = 0x0782;
 uint16_t D = 0x05D4;
 
-// Converts a 16-bit word into a 4-character hexadecimal string with bit rotation for obfuscation
+// Converts a 16-bit word into a custom 4-character hexadecimal string using 4-bit rotations for obfuscation.
 void write_hex_word(uint16_t value, char *buffer) {
     for (int i = 0; i < 4; i++) {
         value = (value << 4) | (value >> 12);
@@ -45,7 +45,7 @@ int main() {
         number >>= 8;
     }
 
-    // Main loop: process each byte and update registers A–D
+    // Main loop: process each byte and update registers A and D
     for (size_t i = 0; i < byte_count; i++) {
         uint8_t byte = data_bytes[i];
         A = (A + byte) & 0xFFFF;
@@ -55,7 +55,7 @@ int main() {
         D = (D << 1) | (D >> 15);
         D ^= A;
 
-        // Swap A and D to shuffle internal state
+        // Cycle registers A and D to shuffle state
         uint16_t tmp = A;
         A = D;
         D = tmp;
